@@ -13,7 +13,7 @@ require (
 	cloud.google.com/go v0.113.0 // indirect
 	cloud.google.com/go/auth v0.3.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
-	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	cloud.fgoogle.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -20,8 +23,15 @@ func APIPort() string {
 
 func secretAlertHandle(c *gin.Context) {
 	log.Println("secret Scanning handler is in progress...")
-
 	body, err := io.ReadAll(c.Request.Body)
+
+	if !VerifySignature(c.Request, body) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": "Unauthorized",
+		})
+		return
+	}
+
 	if err != nil {
 		log.Println("Error reading request body:", err.Error())
 		return
@@ -72,7 +82,16 @@ func secretAlertHandle(c *gin.Context) {
 
 func codeAlertHandle(c *gin.Context) {
 	log.Println("secret Scanning handler is in progress...")
+
 	body, err := io.ReadAll(c.Request.Body)
+
+	if !VerifySignature(c.Request, body) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": "Unauthorized",
+		})
+		return
+	}
+
 	if err != nil {
 		log.Println("Error reading request body:", err.Error())
 		return
@@ -124,6 +143,13 @@ func dependabotAlertHandle(c *gin.Context) {
 	log.Println("secret Scanning handler is in progress...")
 
 	body, err := io.ReadAll(c.Request.Body)
+	if !VerifySignature(c.Request, body) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status": "Unauthorized",
+		})
+		return
+	}
+
 	if err != nil {
 		log.Println("Error reading request body:", err.Error())
 		return
@@ -182,6 +208,21 @@ func dependabotAlertHandle(c *gin.Context) {
 		"status": "ok",
 	})
 	log.Println("secret Scanning handler is done")
+}
+
+func VerifySignature(req *http.Request, body []byte) bool {
+	var WebhookSecret = os.Getenv("WEBHOOK_SECRET")
+
+	mac := hmac.New(sha256.New, []byte(WebhookSecret))
+	mac.Write(body)
+	expectedMAC := mac.Sum(nil)
+	signature := req.Header.Get("X-Hub-Signature-256")
+
+	// Remove the 'sha256=' prefix
+	signature = signature[7:]
+	receivedMAC, _ := hex.DecodeString(signature)
+
+	return hmac.Equal(receivedMAC, expectedMAC)
 }
 
 func main() {
